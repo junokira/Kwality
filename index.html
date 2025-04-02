@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="description" content="Kwality & Klarity - Countdown to our launch on April 4, 2025. Follow us on Instagram, X, and YouTube for updates!" />
   <meta name="keywords" content="Kwality & Klarity, countdown, launch, April 4 2025, social media, Instagram, X, YouTube" />
   <meta name="author" content="Kwality & Klarity" />
@@ -16,7 +16,7 @@
   <meta name="twitter:title" content="Kwality & Klarity Launch Countdown" />
   <meta name="twitter:description" content="Join the countdown to the Kwality & Klarity launch on April 4, 2025. Follow us on social media for updates!" />
   <meta name="twitter:image" content="https://i.ibb.co/ymQQ87rX/k-k-black.png" />
-  <title>Kwality & Klarity - Launch Countdown</title>
+  <title>Kwality & Klarity</title>
   <style>
     * {
       margin: 0;
@@ -26,16 +26,17 @@
     }
 
     body {
-      background-color: white;
+      background-color: #fafafa;
       color: black;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      min-height: 100vh;
-      overflow: auto;
+      height: 100vh;
+      overflow: hidden;
       text-align: center;
       transition: background-color 0.5s, color 0.5s;
+      position: relative;
     }
 
     body.inverted {
@@ -43,11 +44,22 @@
       color: white;
     }
 
+    #ascii-rain {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      pointer-events: none;
+    }
+
     .logo {
       position: absolute;
       top: 20px;
       width: 150px;
       height: auto;
+      z-index: 1;
     }
 
     .main-content {
@@ -56,21 +68,22 @@
       align-items: center;
       justify-content: center;
       flex-grow: 1;
-      padding-top: 150px;
-      padding-bottom: 100px;
+      padding-top: 15vh;
+      padding-bottom: 10vh;
+      z-index: 1;
     }
 
     h1 {
-      font-size: 2rem;
+      font-size: 4rem;
       margin-bottom: 1rem;
       white-space: pre-wrap;
-      letter-spacing: 2px;
+      letter-spacing: 4px;
       font-weight: bold;
     }
 
     #countdown {
-      font-size: 1.5rem;
-      letter-spacing: 2px;
+      font-size: 3rem;
+      letter-spacing: 4px;
     }
 
     #ascii-glitch {
@@ -88,6 +101,7 @@
       font-size: 0.9rem;
       text-align: center;
       width: 100%;
+      z-index: 1;
     }
 
     .footer-email {
@@ -126,8 +140,9 @@
     /* Mobile adjustments */
     @media (max-width: 768px) {
       body {
-        min-height: 100vh;
-        overflow: auto;
+        height: 100vh;
+        overflow: hidden;
+        padding-bottom: calc(150px + env(safe-area-inset-bottom, 20px)); /* Increased padding to ensure content isn't hidden */
       }
 
       .logo {
@@ -136,12 +151,22 @@
       }
 
       .main-content {
-        padding-top: 120px; /* Adjusted for logo height */
-        padding-bottom: 80px; /* Adjusted for footer height */
+        padding-top: 100px;
+        padding-bottom: 40px;
+      }
+
+      h1 {
+        font-size: 2rem;
+        letter-spacing: 2px;
+      }
+
+      #countdown {
+        font-size: 1.5rem;
+        letter-spacing: 2px;
       }
 
       footer {
-        bottom: 10px;
+        bottom: calc(90px + env(safe-area-inset-bottom, 20px)); /* Increased offset to push footer above mobile UI */
         font-size: 0.9rem;
       }
 
@@ -165,7 +190,8 @@
   </style>
 </head>
 <body>
-  <img src="https://i.ibb.co/ymQQ87rX/k-k-black.png" alt="Kwality & Klarity Logo" class="logo" id="logo">
+  <canvas id="ascii-rain"></canvas>
+  <img src="https://i.ibb.co/fGZt3bQb/k-k-black.webp" alt="Kwality & Klarity Logo" class="logo" id="logo">
   <div class="main-content">
     <h1 id="ascii-text">KWALITY & KLARITY.</h1>
     <div id="countdown" aria-live="polite"></div>
@@ -191,9 +217,90 @@
   </footer>
 
   <script>
-    // Glitch effect for the title
-    const targetText = "KWALITY & KLARITY.";
+    // ASCII Rain Background
+    const canvas = document.getElementById("ascii-rain");
+    const ctx = canvas.getContext("2d");
+
+    // Function to set canvas size
+    function resizeCanvas() {
+      canvas.height = window.innerHeight;
+      canvas.width = window.innerWidth;
+      // Recalculate columns based on new width
+      columns = Math.floor(canvas.width / fontSize);
+      // Reset drops array to match new column count
+      drops.length = 0;
+      for (let x = 0; x < columns; x++) {
+        drops[x] = Math.random() * canvas.height / fontSize;
+      }
+    }
+
+    // Set initial canvas size
+    let fontSize = 10;
+    let columns = 0;
+    const drops = [];
+    resizeCanvas();
+
+    // Characters to use for the rain
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*.";
+
+    // Adjust font size based on screen width for better scaling
+    if (window.innerWidth > 1200) {
+      fontSize = 12;
+    } else if (window.innerWidth < 768) {
+      fontSize = 8;
+    }
+
+    // Recalculate columns after setting fontSize
+    columns = Math.floor(canvas.width / fontSize);
+    for (let x = 0; x < columns; x++) {
+      drops[x] = Math.random() * canvas.height / fontSize;
+    }
+
+    function draw() {
+      // Add a semi-transparent background to create a fading effect
+      ctx.fillStyle = "rgba(250, 250, 250, 0.05)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Set the text style
+      ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
+      ctx.font = fontSize + "px monospace";
+
+      // Loop through drops
+      for (let i = 0; i < drops.length; i++) {
+        // Random character
+        const text = chars.charAt(Math.floor(Math.random() * chars.length));
+
+        // Draw the character
+        ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+        // Reset drop to top when it reaches the bottom
+        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+          drops[i] = 0;
+        }
+
+        drops[i]++;
+      }
+    }
+
+    // Loop the animation
+    setInterval(draw, 50);
+
+    // Resize canvas on window resize
+    window.addEventListener("resize", () => {
+      resizeCanvas();
+      // Adjust font size dynamically
+      if (window.innerWidth > 1200) {
+        fontSize = 12;
+      } else if (window.innerWidth < 768) {
+        fontSize = 8;
+      } else {
+        fontSize = 10;
+      }
+    });
+
+    // Glitch effect for the title
+    const targetText = "KWALITY & KLARITY";
+    const charsGlitch = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*.";
     let displayText = Array(targetText.length).fill(" ");
     const asciiTextEl = document.getElementById("ascii-text");
 
@@ -202,7 +309,7 @@
         if (Math.random() > 0.9 || displayText[i] === targetText[i]) {
           displayText[i] = targetText[i];
         } else {
-          displayText[i] = chars[Math.floor(Math.random() * chars.length)];
+          displayText[i] = charsGlitch[Math.floor(Math.random() * charsGlitch.length)];
         }
       }
       asciiTextEl.innerText = displayText.join("");
